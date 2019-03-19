@@ -1,30 +1,27 @@
 ﻿namespace Unosquare.RaspberryIO.Camera
 {
     using Swan;
-    using System;
     using System.Text;
 
     /// <summary>
-    /// Represents the raspivid camera settings for video capture functionality
+    /// Represents the raspivid camera settings for video capture functionality.
     /// </summary>
     /// <seealso cref="CameraSettingsBase" />
     public class CameraVideoSettings : CameraSettingsBase
     {
-        /// <summary>
-        /// Gets the command file executable.
-        /// </summary>
+        /// <inheritdoc />
         public override string CommandName => "raspivid";
 
         /// <summary>
         /// Use bits per second, so 10Mbits/s would be -b 10000000. For H264, 1080p30 a high quality bitrate would be 15Mbits/s or more. 
         /// Maximum bitrate is 25Mbits/s (-b 25000000), but much over 17Mbits/s won't show noticeable improvement at 1080p30.
-        /// Default -1
+        /// Default -1.
         /// </summary>
         public int CaptureBitrate { get; set; } = -1;
 
         /// <summary>
         /// Gets or sets the framerate.
-        /// Default 25, range 2 to 30
+        /// Default 25, range 2 to 30.
         /// </summary>
         public int CaptureFramerate { get; set; } = 25;
 
@@ -45,7 +42,7 @@
         /// <summary>
         /// Gets or sets the profile.
         /// Sets the H264 profile to be used for the encoding.
-        /// Default is Main mode
+        /// Default is Main mode.
         /// </summary>
         public CameraH264Profile CaptureProfile { get; set; } = CameraH264Profile.Main;
 
@@ -67,37 +64,31 @@
         /// </value>
         public bool CaptureDisplayPreviewEncoded { get; set; } = false;
 
-        /// <summary>
-        /// Creates the process arguments.
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc />
         public override string CreateProcessArguments()
         {
             var sb = new StringBuilder(base.CreateProcessArguments());
 
             sb.Append($" -pf {CaptureProfile.ToString().ToLowerInvariant()}");
             if (CaptureBitrate < 0)
-                sb.Append($" -b {CaptureBitrate.Clamp(0, 25000000).ToString(CI)}");
+                sb.Append($" -b {CaptureBitrate.Clamp(0, 25000000).ToString(Ci)}");
 
             if (CaptureFramerate >= 2)
-                sb.Append($" -fps {CaptureFramerate.Clamp(2, 30).ToString(CI)}");
+                sb.Append($" -fps {CaptureFramerate.Clamp(2, 30).ToString(Ci)}");
 
-            if (CaptureDisplayPreview)
-                if (CaptureDisplayPreviewEncoded)
-                    sb.Append($" -e");
+            if (CaptureDisplayPreview && CaptureDisplayPreviewEncoded)
+                    sb.Append(" -e");
 
             if (CaptureKeyframeRate > 0)
-                sb.Append($" -g {CaptureKeyframeRate.ToString(CI)}");
+                sb.Append($" -g {CaptureKeyframeRate.ToString(Ci)}");
 
             if (CaptureQuantisation >= 0)
-                sb.Append($" -qp {CaptureQuantisation.Clamp(0, 40).ToString(CI)}");
+                sb.Append($" -qp {CaptureQuantisation.Clamp(0, 40).ToString(Ci)}");
 
             if (CaptureInterleaveHeaders)
-                sb.Append($" -ih");
+                sb.Append(" -ih");
 
-            var commandArgs = sb.ToString();
-            $"{CommandName} {commandArgs}".Trace(Pi.LoggerSource);
-            return commandArgs;
+            return sb.ToString();
         }
     }
 }

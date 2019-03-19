@@ -7,13 +7,13 @@
     /// <summary>
     /// The Official Raspberry Pi 7-inch touch display from the foundation
     /// Some docs available here:
-    /// http://forums.pimoroni.com/t/official-7-raspberry-pi-touch-screen-faq/959
+    /// http://forums.pimoroni.com/t/official-7-raspberry-pi-touch-screen-faq/959.
     /// </summary>
     public class DsiDisplay : SingletonBase<DsiDisplay>
     {
         private const string BacklightFilename = "/sys/class/backlight/rpi_backlight/bl_power";
         private const string BrightnessFilename = "/sys/class/backlight/rpi_backlight/brightness";
-        
+
         /// <summary>
         /// Prevents a default instance of the <see cref="DsiDisplay"/> class from being created.
         /// </summary>
@@ -41,11 +41,8 @@
             get
             {
                 if (IsPresent == false) return 0;
-                byte brightness = 0;
-                if (byte.TryParse(File.ReadAllText(BrightnessFilename).Trim(), out brightness))
-                    return brightness;
 
-                return 0;
+                return byte.TryParse(File.ReadAllText(BrightnessFilename).Trim(), out var brightness) ? brightness : (byte)0;
             }
             set
             {
@@ -56,7 +53,7 @@
 
         /// <summary>
         /// Gets or sets a value indicating whether the backlight of the DSI display on.
-        /// This operation is performed via the file system
+        /// This operation is performed via the file system.
         /// </summary>
         /// <value>
         /// <c>true</c> if this instance is backlight on; otherwise, <c>false</c>.
@@ -67,11 +64,7 @@
             {
                 if (IsPresent == false) return false;
 
-                int backlight;
-                if (int.TryParse(File.ReadAllText(BacklightFilename).Trim(), out backlight))
-                    return backlight == 0;
-
-                return false;
+                return int.TryParse(File.ReadAllText(BacklightFilename).Trim(), out var value) && value == 0;
             }
             set
             {

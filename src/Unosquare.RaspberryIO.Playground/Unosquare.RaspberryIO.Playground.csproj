@@ -1,14 +1,29 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net452;netcoreapp1.1</TargetFrameworks>
+    <TargetFrameworks>net461;netcoreapp2.2</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netcoreapp2.0</TargetFrameworks>
+    <RuntimeIdentifier>linux-arm</RuntimeIdentifier>
     <AssemblyName>Unosquare.RaspberryIO.Playground</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>Unosquare.RaspberryIO.Playground</PackageId>
-    <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
-    <RuntimeFrameworkVersion Condition=" '$(TargetFramework)' == 'netcoreapp1.1' ">1.1.1</RuntimeFrameworkVersion>
+    <CodeAnalysisRuleSet>..\..\StyleCop.Analyzers.ruleset</CodeAnalysisRuleSet>
+    <SshDeployHost>172.16.17.191</SshDeployHost>
+    <SshDeployClean />
+    <SshDeployTargetPath>/home/pi/playground</SshDeployTargetPath>
+    <SshDeployUsername>pi</SshDeployUsername>
+    <LangVersion>7.3</LangVersion>
+    <SshDeployPassword>raspberry</SshDeployPassword>
+    <!--<SshDeployPostCommand>dotnet /home/pi/playground/Unosquare.RaspberryIO.Playground.dll</SshDeployPostCommand>-->
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.1-beta.61">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Unosquare.Swan.Lite" Version="0.39.0" />
+  </ItemGroup>
   <ItemGroup>
     <None Update="fractal.jpg;spectrum.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -16,18 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Unosquare.RaspberryIO\Unosquare.RaspberryIO.csproj" />
+    <ProjectReference Include="..\Unosquare.RaspberryIO.Peripherals\Unosquare.RaspberryIO.Peripherals.csproj" />
   </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net452' ">
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.1' ">
-    <PackageReference Include="System.ComponentModel.Primitives" Version="4.3.0">
-      <IncludeAssets>Analyzers;Build;Compile;ContentFiles;Native</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
 </Project>

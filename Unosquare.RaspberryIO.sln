@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{AD40570E-5084-4507-AFB7-647230B007E0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{144147AA-41C9-4639-AF1E-F08534CA8D49}"
 	ProjectSection(SolutionItems) = preProject
-		create-sshdeploy.cmd = create-sshdeploy.cmd
 		LICENSE = LICENSE
 		README.md = README.md
+		StyleCop.Analyzers.ruleset = StyleCop.Analyzers.ruleset
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{C8A487A8-8399-4A13-8402-3629998E2A4D}"
@@ -32,13 +32,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{C8A487A8-8
 		docs\Timing _ Wiring Pi.pdf = docs\Timing _ Wiring Pi.pdf
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sshdeploy", "sshdeploy", "{6197D26E-C895-4E92-8EC3-A59821F3A7CE}"
-	ProjectSection(SolutionItems) = preProject
-		sshdeploy\CommandLine.dll = sshdeploy\CommandLine.dll
-		sshdeploy\Renci.SshNet.dll = sshdeploy\Renci.SshNet.dll
-		sshdeploy\SshDeploy.exe = sshdeploy\SshDeploy.exe
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "logos", "logos", "{589B0F6C-14BD-4DB7-9108-A016EA3F476F}"
 	ProjectSection(SolutionItems) = preProject
 		logos\raspberry-io.fw.png = logos\raspberry-io.fw.png
@@ -49,6 +42,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Unosquare.RaspberryIO", "src\Unosquare.RaspberryIO\Unosquare.RaspberryIO.csproj", "{71BF0E4E-9BCF-40C2-AE1C-7F17FE6C82CB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Unosquare.RaspberryIO.Playground", "src\Unosquare.RaspberryIO.Playground\Unosquare.RaspberryIO.Playground.csproj", "{87BDC267-91D2-4CD1-B088-0F0791948C0E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Unosquare.RaspberryIO.Peripherals", "src\Unosquare.RaspberryIO.Peripherals\Unosquare.RaspberryIO.Peripherals.csproj", "{2E1822A8-C08F-4379-B29A-F476B1CD2EE0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Unosquare.RaspberryIO.Abstractions", "src\Unosquare.RaspberryIO.Abstractions\Unosquare.RaspberryIO.Abstractions.csproj", "{01319087-49C3-4BC6-BA85-80A52005A9E8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -64,16 +61,25 @@ Global
 		{87BDC267-91D2-4CD1-B088-0F0791948C0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87BDC267-91D2-4CD1-B088-0F0791948C0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87BDC267-91D2-4CD1-B088-0F0791948C0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E1822A8-C08F-4379-B29A-F476B1CD2EE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E1822A8-C08F-4379-B29A-F476B1CD2EE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E1822A8-C08F-4379-B29A-F476B1CD2EE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E1822A8-C08F-4379-B29A-F476B1CD2EE0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{01319087-49C3-4BC6-BA85-80A52005A9E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01319087-49C3-4BC6-BA85-80A52005A9E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01319087-49C3-4BC6-BA85-80A52005A9E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01319087-49C3-4BC6-BA85-80A52005A9E8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C8A487A8-8399-4A13-8402-3629998E2A4D} = {144147AA-41C9-4639-AF1E-F08534CA8D49}
-		{6197D26E-C895-4E92-8EC3-A59821F3A7CE} = {144147AA-41C9-4639-AF1E-F08534CA8D49}
 		{589B0F6C-14BD-4DB7-9108-A016EA3F476F} = {144147AA-41C9-4639-AF1E-F08534CA8D49}
 		{71BF0E4E-9BCF-40C2-AE1C-7F17FE6C82CB} = {AD40570E-5084-4507-AFB7-647230B007E0}
 		{87BDC267-91D2-4CD1-B088-0F0791948C0E} = {AD40570E-5084-4507-AFB7-647230B007E0}
+		{2E1822A8-C08F-4379-B29A-F476B1CD2EE0} = {AD40570E-5084-4507-AFB7-647230B007E0}
+		{01319087-49C3-4BC6-BA85-80A52005A9E8} = {AD40570E-5084-4507-AFB7-647230B007E0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {284182C7-6434-490D-BFC0-4DB344A38C2A}

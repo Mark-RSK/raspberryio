@@ -6,21 +6,19 @@
     using System.Text;
 
     /// <summary>
-    /// Defines a wrapper for the raspistill program and its settings (command-line arguments)
+    /// Defines a wrapper for the raspistill program and its settings (command-line arguments).
     /// </summary>
-    /// <seealso cref="Unosquare.RaspberryIO.Camera.CameraSettingsBase" />
+    /// <seealso cref="CameraSettingsBase" />
     public class CameraStillSettings : CameraSettingsBase
     {
         private int _rotate;
 
-        /// <summary>
-        /// Gets the command file executable.
-        /// </summary>
+        /// <inheritdoc />
         public override string CommandName => "raspistill";
 
         /// <summary>
         /// Gets or sets a value indicating whether the preview window (if enabled) uses native capture resolution
-        /// This may slow down preview FPS
+        /// This may slow down preview FPS.
         /// </summary>
         public bool CaptureDisplayPreviewAtResolution { get; set; } = false;
 
@@ -31,7 +29,7 @@
 
         /// <summary>
         /// Gets or sets the quality for JPEG only encoding mode.
-        /// Value ranges from 0 to 100
+        /// Value ranges from 0 to 100.
         /// </summary>
         public int CaptureJpegQuality { get; set; } = 90;
 
@@ -62,24 +60,25 @@
         /// </value>
         public bool VerticalFlip { get; set; } = false;
 
-        public int Rotate
+        /// <summary>
+        /// Gets or sets the rotation.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">Valid range 0-359.</exception>
+        public int Rotation
         {
             get => _rotate;
             set
             {
                 if (value < 0 || value > 359)
                 {
-                    throw new ArgumentOutOfRangeException("Valid range 0-359");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Valid range 0-359");
                 }
 
                 _rotate = value;
             }
         }
 
-        /// <summary>
-        /// Creates the process arguments.
-        /// </summary>
-        /// <returns>The process command line string</returns>
+        /// <inheritdoc />
         public override string CreateProcessArguments()
         {
             var sb = new StringBuilder(base.CreateProcessArguments());
@@ -88,7 +87,7 @@
             // JPEG Encoder specific arguments
             if (CaptureEncoding == CameraImageEncodingFormat.Jpg)
             {
-                sb.Append($" -q {CaptureJpegQuality.Clamp(0, 100).ToString(CI)}");
+                sb.Append($" -q {CaptureJpegQuality.Clamp(0, 100).ToString(Ci)}");
 
                 if (CaptureJpegIncludeRawBayerMetadata)
                     sb.Append(" -r");
@@ -109,15 +108,13 @@
             // Display preview settings
             if (CaptureDisplayPreview && CaptureDisplayPreviewAtResolution) sb.Append(" -fp");
 
-            if (Rotate != 0) sb.Append($" -rot {Rotate}");
+            if (Rotation != 0) sb.Append($" -rot {Rotation}");
 
             if (HorizontalFlip) sb.Append(" -hf");
 
             if (VerticalFlip) sb.Append(" -vf");
 
-            var commandArgs = sb.ToString();
-            $"{CommandName} {commandArgs}".Trace(Pi.LoggerSource);
-            return commandArgs;
+            return sb.ToString();
         }
     }
 }

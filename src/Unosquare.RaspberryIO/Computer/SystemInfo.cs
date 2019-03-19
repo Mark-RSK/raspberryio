@@ -1,6 +1,7 @@
 ﻿namespace Unosquare.RaspberryIO.Computer
 {
-    using Native;
+    using Abstractions;
+    using Abstractions.Native;
     using Swan.Abstractions;
     using Swan.Components;
     using System;
@@ -11,26 +12,18 @@
     using System.Reflection;
 
     /// <summary>
-    /// http://raspberry-pi-guide.readthedocs.io/en/latest/system.html
+    /// http://raspberry-pi-guide.readthedocs.io/en/latest/system.html.
     /// </summary>
     public sealed class SystemInfo : SingletonBase<SystemInfo>
     {
         private const string CpuInfoFilePath = "/proc/cpuinfo";
         private const string MemInfoFilePath = "/proc/meminfo";
+        private const string UptimeFilePath = "/proc/uptime";
 
-#if NET452
-        private static readonly StringComparer stringComparer = StringComparer.InvariantCultureIgnoreCase;
-#else
-        private static readonly StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
-#endif
-
-        private static readonly object SyncRoot = new object();
-        private static bool? m_IsRunningAsRoot = new bool?();
-        
         /// <summary>
         /// Prevents a default instance of the <see cref="SystemInfo"/> class from being created.
         /// </summary>
-        /// <exception cref="System.NotSupportedException">Could not initialize the GPIO controller</exception>
+        /// <exception cref="NotSupportedException">Could not initialize the GPIO controller.</exception>
         private SystemInfo()
         {
             #region Obtain and format a property dictionary
@@ -43,7 +36,7 @@
                             p.CanWrite && p.CanRead &&
                             (p.PropertyType == typeof(string) || p.PropertyType == typeof(string[])))
                     .ToArray();
-            var propDictionary = new Dictionary<string, PropertyInfo>(stringComparer);
+            var propDictionary = new Dictionary<string, PropertyInfo>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var prop in properties)
             {
@@ -60,7 +53,7 @@
 
                 foreach (var line in cpuInfoLines)
                 {
-                    var lineParts = line.Split(new[] {':'}, 2);
+                    var lineParts = line.Split(new[] { ':' }, 2);
                     if (lineParts.Length != 2)
                         continue;
 
@@ -91,7 +84,7 @@
                 var memInfoLines = File.ReadAllLines(MemInfoFilePath);
                 foreach (var line in memInfoLines)
                 {
-                    var lineParts = line.Split(new[] {':'}, 2);
+                    var lineParts = line.Split(new[] { ':' }, 2);
                     if (lineParts.Length != 2)
                         continue;
 
@@ -99,9 +92,8 @@
                         continue;
 
                     var memKb = lineParts[1].ToLowerInvariant().Trim().Replace("kb", string.Empty).Trim();
-                    int parsedMem;
 
-                    if (int.TryParse(memKb, out parsedMem))
+                    if (int.TryParse(memKb, out var parsedMem))
                     {
                         InstalledRam = parsedMem * 1024;
                         break;
@@ -113,24 +105,25 @@
 
             #region Board Version and Form Factor
 
+            var hasSysInfo = DependencyContainer.Current.CanResolve<ISystemInfo>();
             try
             {
-                int boardVersion;
                 if (string.IsNullOrWhiteSpace(Revision) == false &&
                     int.TryParse(
                         Revision.ToUpperInvariant(),
                         NumberStyles.HexNumber,
                         CultureInfo.InvariantCulture,
-                        out boardVersion))
+                        out var boardVersion))
                 {
                     RaspberryPiVersion = PiVersion.Unknown;
                     if (Enum.GetValues(typeof(PiVersion)).Cast<int>().Contains(boardVersion))
                     {
-                        RaspberryPiVersion = (PiVersion) boardVersion;
+                        RaspberryPiVersion = (PiVersion)boardVersion;
                     }
                 }
 
-                WiringPiBoardRevision = WiringPi.piBoardRev();
+                if (hasSysInfo)
+                    BoardRevision = (int)DependencyContainer.Current.Resolve<ISystemInfo>().BoardRevision;
             }
             catch
             {
@@ -141,13 +134,8 @@
 
             #region Version Information
 
-            {
-                var libParts = WiringPi.WiringPiLibrary.Split('.');
-                var major = int.Parse(libParts[libParts.Length - 2]);
-                var minor = int.Parse(libParts[libParts.Length - 1]);
-                var version = new Version(major, minor);
-                WiringPiVersion = version;
-            }
+            if (hasSysInfo)
+                LibraryVersion = DependencyContainer.Current.Resolve<ISystemInfo>().LibraryVersion;
 
             #endregion
 
@@ -155,16 +143,16 @@
 
             try
             {
-                utsname unameInfo;
-                Standard.uname(out unameInfo);
+                Standard.Uname(out var unameInfo);
+
                 OperatingSystem = new OsInfo
                 {
-                    DomainName = unameInfo.domainname,
-                    Machine = unameInfo.machine,
-                    NodeName = unameInfo.nodename,
-                    Release = unameInfo.release,
-                    SysName = unameInfo.sysname,
-                    Version = unameInfo.version
+                    DomainName = unameInfo.DomainName,
+                    Machine = unameInfo.Machine,
+                    NodeName = unameInfo.NodeName,
+                    Release = unameInfo.Release,
+                    SysName = unameInfo.SysName,
+                    Version = unameInfo.Version,
                 };
             }
             catch
@@ -176,9 +164,9 @@
         }
 
         /// <summary>
-        /// Gets the wiring pi library version.
+        /// Gets the library version.
         /// </summary>
-        public Version WiringPiVersion { get; }
+        public Version LibraryVersion { get; }
 
         /// <summary>
         /// Gets the OS information.
@@ -194,44 +182,27 @@
         public PiVersion RaspberryPiVersion { get; }
 
         /// <summary>
-        /// Gets the Wiring Pi board revision (1 or 2).
+        /// Gets the board revision (1 or 2).
         /// </summary>
         /// <value>
         /// The wiring pi board revision.
         /// </value>
-        public int WiringPiBoardRevision { get; private set; }
+        public int BoardRevision { get; }
 
         /// <summary>
         /// Gets the number of processor cores.
         /// </summary>
-        public int ProcessorCount
-        {
-            get
-            {
-                int outIndex;
-                if (int.TryParse(Processor, out outIndex))
-                {
-                    return outIndex + 1;
-                }
-
-                return 0;
-            }
-        }
+        public int ProcessorCount => int.TryParse(Processor, out var outIndex) ? outIndex + 1 : 0;
 
         /// <summary>
         /// Gets the installed ram in bytes.
         /// </summary>
-        public int InstalledRam { get; private set; }
+        public int InstalledRam { get; }
 
         /// <summary>
         /// Gets a value indicating whether this CPU is little endian.
         /// </summary>
         public bool IsLittleEndian => BitConverter.IsLittleEndian;
-
-        /// <summary>
-        /// Placeholder for processor index
-        /// </summary>
-        private string Processor { get; set; }
 
         /// <summary>
         /// Gets the CPU model name.
@@ -284,20 +255,19 @@
         public string Serial { get; private set; }
 
         /// <summary>
-        /// Gets the uptime (at seconds).
+        /// Gets the system up-time (in seconds).
         /// </summary>
-        /// <value>
-        /// The uptime.
-        /// </value>
-        public ulong Uptime
+        public double Uptime
         {
             get
             {
                 try
                 {
-                    utssysinfo sysInfo;
-                    if (Standard.sysinfo(out sysInfo) == 0)
-                        return sysInfo.uptime;
+                    if (File.Exists(UptimeFilePath) == false) return 0;
+                    var parts = File.ReadAllText(UptimeFilePath).Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    if (parts.Length >= 1 && float.TryParse(parts[0], out var result))
+                        return result;
                 }
                 catch
                 {
@@ -314,49 +284,15 @@
         public TimeSpan UptimeTimeSpan => TimeSpan.FromSeconds(Uptime);
 
         /// <summary>
-        /// Reboots this computer.
+        /// Placeholder for processor index.
         /// </summary>
-        public void Reboot()
-        {
-#pragma warning disable 4014
-            ProcessRunner.GetProcessOutputAsync("reboot");
-#pragma warning restore 4014
-        }
+        private string Processor { get; set; }
 
         /// <summary>
-        /// Gets a value indicating whether this program is running as Root
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if this instance is running as root; otherwise, <c>false</c>.
-        /// </value>
-        public bool IsRunningAsRoot
-        {
-            get
-            {
-                lock (SyncRoot)
-                {
-                    if (m_IsRunningAsRoot.HasValue == false)
-                    {
-                        try
-                        {
-                            m_IsRunningAsRoot = Standard.getuid() == 0;
-                        }
-                        catch
-                        {
-                            m_IsRunningAsRoot = false;
-                        }
-                    }
-
-                    return m_IsRunningAsRoot.Value;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// Returns a <see cref="string" /> that represents this instance.
         /// </summary>
         /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
+        /// A <see cref="string" /> that represents this instance.
         /// </returns>
         public override string ToString()
         {
@@ -366,36 +302,30 @@
                                 p.PropertyType == typeof(string[]) ||
                                 p.PropertyType == typeof(int) ||
                                 p.PropertyType == typeof(bool) ||
-                                p.PropertyType == typeof(TimeSpan)
-                            ))
+                                p.PropertyType == typeof(TimeSpan)))
                 .ToArray();
 
-            var properyValues = new List<string>
+            var propertyValues2 = new List<string>
             {
                 "System Information",
-                $"\t{nameof(WiringPiVersion),-22}: {WiringPiVersion}",
-                $"\t{nameof(RaspberryPiVersion),-22}: {RaspberryPiVersion}"
+                $"\t{nameof(LibraryVersion),-22}: {LibraryVersion}",
+                $"\t{nameof(RaspberryPiVersion),-22}: {RaspberryPiVersion}",
             };
 
             foreach (var property in properties)
             {
                 if (property.PropertyType != typeof(string[]))
                 {
-                    properyValues.Add($"\t{property.Name,-22}: {property.GetValue(this)}");
+                    propertyValues2.Add($"\t{property.Name,-22}: {property.GetValue(this)}");
                 }
-                else
+                else if (property.GetValue(this) is string[] allValues)
                 {
-                    var allValues = property.GetValue(this) as string[];
-
-                    if (allValues != null)
-                    {
-                        var concatValues = string.Join(" ", allValues);
-                        properyValues.Add($"\t{property.Name,-22}: {concatValues}");
-                    }
+                    var concatValues = string.Join(" ", allValues);
+                    propertyValues2.Add($"\t{property.Name,-22}: {concatValues}");
                 }
             }
 
-            return string.Join(Environment.NewLine, properyValues.ToArray());
+            return string.Join(Environment.NewLine, propertyValues2.ToArray());
         }
     }
 }
